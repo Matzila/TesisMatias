@@ -1,101 +1,103 @@
-1.	#!/usr/bin/python
-2.	 
-3.	import random
-4.	import pymongo
-5.	from pymongo import MongoClient
-6.	 
-7.	client = MongoClient ('localhost',27017)
-8.	db = client.tesis
-9.	candidatos2 = db.Candidatos
-10.	 
-11.	sistema = 'Windows'
-12.	 
-13.	def getch(): 
-14.	        global sistema
-15.	        ch = ''
-16.	        if sistema == 'Linux':
-17.	                import sys, tty, termios
-18.	 
-19.	                fd = sys.stdin.fileno()
-20.	                old_settings = termios.tcgetattr(fd)
-21.	                tty.setraw(sys.stdin.fileno())
-22.	                ch = sys.stdin.read(1)
-23.	                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-24.	        elif sistema == 'Windows':
-25.	                ch = input()
-26.	                      
-27.	        return str(ch)
-28.	 
-29.	candidatos = ["lavagna", "fernandez", "macri", "del_cano", "espert"]
-30.	total = [1000, 1000, 1000, 1000, 1000]
-31.	etiquetados = [0, 0, 0, 0, 0]
-32.	positivos = [0, 0, 0, 0, 0]
-33.	negativos = [0, 0, 0, 0, 0]
-34.	neutros = [0, 0, 0, 0, 0]
-35.	tweets = ["Un tweet positivo", "Un tweet negativo", "Un tweet neutro"]
-36.	 
-37.	def etiquetarTweets(candidato):
-38.	        fin = False
-39.	        while (not fin):
-40.	
-41.	                print ("\n\n\n")
-42.	                print (candidatos[candidato] + "\t total: " + str(total[candidato]) + "\t etiquetados: " + str(etiquetados[candidato]) + " (" + str(positivos[candidato]) + ", " + str(neutros[candidato]) + ", " + str(negativos[candidato]) + ")")
-43.	                print ("\n*********************************************")
-44.	                #tweet = random.randint(0, 2)
-45.	                tweet = traerTweet(candidatos[candidato])
-46.	                print (tweet['text'])
-47.	                print ("*********************************************")
-48.	                print ("\n (1) Positivo                  (2) Neutro             (3) Negativo")
-49.	                tecla = getch()
-50.	                if tecla == 'q':
-51.	                        fin = True
-52.	                else:
-53.	                        if (tecla >= '1' and tecla <= '3'):
-54.	                                etiquetados[candidato] += 1
-55.	                        if (tecla == '1'):
-56.	                                positivos[candidato] += 1
-57.	                                candidatos2.update_one({'_id':tweet['_id']},{"$set":{"sentiment":'positivo'}})
-58.	                        elif (tecla == '2'):
-59.	                                neutros[candidato] += 1
-60.	                                candidatos2.update_one({'_id':tweet['_id']},{"$set":{"sentiment":'neutro'}})
-61.	                        elif (tecla == '3'):
-62.	                                negativos[candidato] += 1
-63.	                                candidatos2.update_one({'_id':tweet['_id']},{"$set":{"sentiment":'negativo'}})
-64.	 
-65.	 
-66.	def mostrarCandidatos():
-67.	        fin = False
-68.	        while (not fin):
-69.	                print ("\n\n\n")
-70.	                i = 0
-71.	                print ("candidato" + "\t #total" + "\t #etiquetados" + "\t #positivos" + "\t #neutros" + "\t #negativos")
-72.	                for c in candidatos:
-73.	                        print ("(" + str(i+1) + ") " + c + "\t  " + str(total[i])  + "\t\t" + str(etiquetados[i]) + "\t\t" + str(positivos[i]) + "\t\t" + str(neutros[i]) + "\t\t" + str(negativos[i]))
-74.	                        i += 1
-75.	                tecla = getch()
-76.	                if tecla == 'q':
-77.	                        fin = True
-78.	                elif (tecla >= '1' and tecla <='6'):
-79.	                        candidato = int(tecla) - 1
-80.	                        etiquetarTweets(candidato)
-81.	 
-82.	def traerTweet(candidato):
-83.	        if (candidato == 'lavagna'):
-84.	                
-85.	                tweet = candidatos2.find_one({"candidato":"Lavagna","sentiment":"","date":20190825}) 
-86.	                return tweet
-87.	        elif (candidato == 'fernandez'):
-88.	                tweet = candidatos2.find_one({"candidato":"Fernandez","sentiment":"","date":20191007}) 
-89.	                return tweet
-90.	        elif (candidato == 'macri'):
-91.	                tweet = candidatos2.find_one({"candidato":"Macri","sentiment":"", "date":20191015}) 
-92.	                return tweet
-93.	        elif (candidato == 'del_cano'):
-94.	                tweet = candidatos2.find_one({"candidato":"Del_Cano","sentiment":"","date":20190831}) 
-95.	                return tweet
-96.	        elif (candidato == 'espert'):
-97.	                tweet = candidatos2.find_one({"candidato":"Espert","sentiment":"","date":20190820}) 
-98.	                return tweet
-99.	                
-100.	 
-101.	mostrarCandidatos()
+#!/usr/bin/python
+ 
+import random
+import pymongo
+from pymongo import MongoClient
+ 
+client = MongoClient ('localhost',27017)
+db = client.tesis
+candidatos2 = db.Candidatos
+ 
+sistema = 'Windows'
+ 
+def getch(): 
+        global sistema
+        ch = ''
+        if sistema == 'Linux':
+                import sys, tty, termios
+ 
+                fd = sys.stdin.fileno()
+                old_settings = termios.tcgetattr(fd)
+                tty.setraw(sys.stdin.fileno())
+                ch = sys.stdin.read(1)
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        elif sistema == 'Windows':
+                ch = input()
+                      
+        return str(ch)
+ 
+candidatos = ["lavagna", "fernandez", "macri", "del_cano", "espert"]
+total = [1000, 1000, 1000, 1000, 1000]
+etiquetados = [0, 0, 0, 0, 0]
+positivos = [0, 0, 0, 0, 0]
+negativos = [0, 0, 0, 0, 0]
+neutros = [0, 0, 0, 0, 0]
+tweets = ["Un tweet positivo", "Un tweet negativo", "Un tweet neutro"]
+ 
+def etiquetarTweets(candidato):
+        fin = False
+        while (not fin):
+ 
+                print ("\n\n\n")
+                print (candidatos[candidato] + "\t total: " + str(total[candidato]) + "\t etiquetados: " + str(etiquetados[candidato]) + " (" + str(positivos[candidato]) + ", " + str(neutros[candidato]) + ", " + str(negativos[candidato]) + ")")
+                print ("\n*********************************************")
+                #tweet = random.randint(0, 2)
+                tweet = traerTweet(candidatos[candidato])
+                print (tweet['text'])
+                print ("*********************************************")
+                print ("\n (1) Positivo                  (2) Neutro             (3) Negativo")
+                tecla = getch()
+                if tecla == 'q':
+                        fin = True
+                else:
+                        if (tecla >= '1' and tecla <= '3'):
+                                etiquetados[candidato] += 1
+                        if (tecla == '1'):
+                                positivos[candidato] += 1
+                                candidatos2.update_one({'_id':tweet['_id']},{"$set":{"sentiment":'positivo'}})
+                        elif (tecla == '2'):
+                                neutros[candidato] += 1
+                                candidatos2.update_one({'_id':tweet['_id']},{"$set":{"sentiment":'neutro'}})
+                        elif (tecla == '3'):
+                                negativos[candidato] += 1
+                                candidatos2.update_one({'_id':tweet['_id']},{"$set":{"sentiment":'negativo'}})
+ 
+ 
+def mostrarCandidatos():
+        fin = False
+        while (not fin):
+                print ("\n\n\n")
+                i = 0
+                print ("candidato" + "\t #total" + "\t #etiquetados" + "\t #positivos" + "\t #neutros" + "\t #negativos")
+                for c in candidatos:
+                        print ("(" + str(i+1) + ") " + c + "\t  " + str(total[i])  + "\t\t" + str(etiquetados[i]) + "\t\t" + str(positivos[i]) + "\t\t" + str(neutros[i]) + "\t\t" + str(negativos[i]))
+                        i += 1
+                tecla = getch()
+                if tecla == 'q':
+                        fin = True
+                elif (tecla >= '1' and tecla <='6'):
+                        candidato = int(tecla) - 1
+                        etiquetarTweets(candidato)
+ 
+def traerTweet(candidato):
+        if (candidato == 'lavagna'):
+                
+                tweet = candidatos2.find_one({"candidato":"Lavagna","sentiment":"","date":20190825}) 
+                return tweet
+        elif (candidato == 'fernandez'):
+                tweet = candidatos2.find_one({"candidato":"Fernandez","sentiment":"","date":20191007}) 
+                return tweet
+        elif (candidato == 'macri'):
+                tweet = candidatos2.find_one({"candidato":"Macri","sentiment":"", "date":20191015}) 
+                return tweet
+        elif (candidato == 'del_cano'):
+                tweet = candidatos2.find_one({"candidato":"Del_Cano","sentiment":"","date":20190831}) 
+                return tweet
+        elif (candidato == 'espert'):
+                tweet = candidatos2.find_one({"candidato":"Espert","sentiment":"","date":20190820}) 
+                return tweet
+                
+ 
+mostrarCandidatos()
+ 
+ 
