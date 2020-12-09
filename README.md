@@ -1,4 +1,4 @@
-# TesisMatias
+# Tesis Matias Granata
 
 ## Scripts utilizados para el caso práctico
 
