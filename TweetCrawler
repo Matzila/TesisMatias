@@ -1,0 +1,95 @@
+1.	import json
+2.	import sys
+3.	import tweepy
+4.	from tweepy import Stream
+5.	import re
+6.	from unicodedata import normalize
+7.	 
+8.	 
+9.	consumer_key = 'TN88qt9w68bOf7jD8odthgt4a'
+10.	consumer_secret = '1oaK1BgsrGVDDEhB1sRRbgXdSEphqPQ8ZDcLLwWCR18MYuG4M2'
+11.	access_token = '49425950-Gia42xuDhQnqKXakyVAxAL8svpALcoavr2upFEiIy'
+12.	access_token_secret = 'jWmjANzc6AMWyw6Xnrv5i3Tm97WZ5xaSiFtfgnZXfSINV'
+13.	 
+14.	dicc = {}
+15.	 
+16.	brand = 'Espert'
+17.	 
+18.	class TweetListener(tweepy.streaming.StreamListener):
+19.	 
+20.	 
+21.	    def on_data (self, data):
+22.	        
+23.	        all_data = json.loads(data)
+24.	        if 'text' in all_data:
+25.	            if 'extended_tweet' in all_data:
+26.	                tweet = all_data ['extended_tweet']['full_text']
+27.	                tweetText = re.sub(
+28.	        r"([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+", r"\1", 
+29.	        normalize( "NFD", tweet), 0, re.I)
+30.	                tweetText = normalize( 'NFC', tweetText)
+31.	                dicc ['text'] = tweetText
+32.	            else:
+33.	                tweet = all_data ['text']
+34.	                tweetText = re.sub(
+35.	        r"([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+", r"\1", 
+36.	        normalize( "NFD", tweet), 0, re.I)
+37.	                tweetText = normalize( 'NFC', tweetText)
+38.	                dicc ['text'] = tweetText
+39.	                created_at = all_data ['created_at']
+40.	                dicc ['created_at'] = created_at
+41.	                retweeted = all_data['retweeted']
+42.	                
+43.	                dicc ['retweeted'] = retweeted
+44.	                username = all_data ['user']['screen_name']
+45.	                tweetText = re.sub(
+46.	        r"([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+", r"\1", 
+47.	        normalize( "NFD", username), 0, re.I)
+48.	                tweetText = normalize( 'NFC', tweetText)
+49.	                dicc ['username'] = tweetText
+50.	                user_tz = all_data ['user']['time_zone']
+51.	                dicc ['user_tz'] = user_tz
+52.	                user_location = all_data['user']['location']
+53.	                if user_location is None:
+54.	                    dicc ['user_location'] = user_location
+55.	                else:
+56.	                    tweetText = re.sub(
+57.	            r"([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+", r"\1", 
+58.	            normalize( "NFD", user_location), 0, re.I)
+59.	                    tweetText = normalize( 'NFC', tweetText)
+60.	                    dicc ['user_location'] = tweetText
+61.	                user_coordinates = all_data['coordinates']
+62.	                if user_coordinates is None:
+63.	                    final_coordinates = user_coordinates
+64.	                    dicc ['user_coordinates'] = final_coordinates
+65.	                else:
+66.	                    final_coordinates = str (all_data['coordinates']['coordinates'])
+67.	                    dicc ['user_coordinates'] = final_coordinates
+68.	            #print (tweet)
+69.	            #print (dicc)
+70.	            with open('Espert.json', 'a') as f:
+71.	                json.dump(dicc,f)
+72.	                f.write('\n')
+73.	 
+74.	        
+75.	 
+76.	 
+77.	    def on_error (self,status):
+78.	        print ('Something went wrong. Status', status)
+79.	 
+80.	 
+81.	if __name__ == '__main__':
+82.	 
+83.	    print ('hola')
+84.	 
+85.	    auth = tweepy.OAuthHandler (consumer_key,consumer_secret)
+86.	    auth.set_access_token (access_token, access_token_secret)
+87.	    api = tweepy.API(auth)
+88.	 
+89.	    l = TweetListener()
+90.	    twitterStream = Stream(auth,l)
+91.	    if brand is None:
+92.	        twitterStream.sample()
+93.	    else:
+94.	        twitterStream.filter(track =[brand],languages = ['es'], stall_warnings = True) 
+95.	 
