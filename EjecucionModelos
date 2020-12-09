@@ -1,179 +1,180 @@
-1.	#Importing Essentials
-2.	import pandas as pd
-3.	from sklearn import metrics
-4.	from sklearn.model_selection import train_test_split
-5.	from sklearn.feature_extraction.text import CountVectorizer
-6.	from sklearn.svm import LinearSVC
-7.	from sklearn.svm import SVC
-8.	from sklearn.naive_bayes import MultinomialNB
-9.	from sklearn.naive_bayes import GaussianNB
-10.	from sklearn.naive_bayes import BernoulliNB
-11.	from sklearn.linear_model import LogisticRegression
-12.	from sklearn.neighbors import KNeighborsClassifier
-13.	from sklearn.tree import DecisionTreeClassifier
-14.	from sklearn.tree import DecisionTreeRegressor
-15.	from sklearn.ensemble import RandomForestClassifier
-16.	from sklearn.ensemble import GradientBoostingRegressor
-17.	 
-18.	 
-19.	import pymongo
-20.	from pymongo import MongoClient
-21.	client = MongoClient ('localhost',27017)
-22.	db = client.tesis
-23.	candidatos = db.Candidatos
-24.	 
-25.	from warnings import simplefilter
-26.	simplefilter(action='ignore', category=FutureWarning)
-27.	 
-28.	 
-29.	processedTweets = []
-30.	contador = 0        
-31.	for tweet in candidatos.find({"$or": [{'sentiment':"positivo"},{'sentiment':"negativo"}]},no_cursor_timeout=True):
-32.	    orden = contador
-33.	    text = tweet['text']
-34.	    _id = tweet["_id"]
-35.	    sentiment = tweet['sentiment']
-36.	    processedTweets.append({'orden':orden,'text':text,'_id':_id,'sentiment':sentiment})
-37.	    frame_tweets = pd.DataFrame(processedTweets, columns = ['orden','text','_id','sentiment'])
-38.	    contador = contador +1
-39.	    
-40.	print (frame_tweets.shape)
-41.	 
-42.	            
-43.	processedTweetsX = frame_tweets.text
-44.	processedTweetsY = frame_tweets.sentiment
-45.	#Using CountVectorizer to convert text into tokens/features
-46.	vect = CountVectorizer(stop_words='english', ngram_range = (1,1), max_df = .80, min_df = 4)
-47.	X_train, X_test, y_train, y_test = train_test_split(processedTweetsX,processedTweetsY,random_state=1, test_size= 0.2)
-48.	#Using training data to transform text into counts of features for each message
-49.	vect.fit(X_train)
-50.	X_train_dtm = vect.transform(X_train) 
-51.	X_test_dtm = vect.transform(X_test)
-52.	 
-53.	#Accuracy using Naive Bayes Model
-54.	NB = MultinomialNB(alpha = 0.001)
-55.	NB.fit(X_train_dtm, y_train)
-56.	y_predNB = NB.predict(X_test_dtm)
-57.	print('\nNaive Bayes Multinomial')
-58.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predNB)*100,'%',sep='')
-59.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predNB), sep = '\n')
-60.	 
-61.	#Accuracy using Naive Bayes Model
-62.	NB = BernoulliNB(alpha = 0.001)
-63.	NB.fit(X_train_dtm, y_train)
-64.	y_predNB = NB.predict(X_test_dtm)
-65.	print('\nNaive Bayes BernoulliNB')
-66.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predNB)*100,'%',sep='')
-67.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predNB), sep = '\n')
-68.	 
-69.	 
-70.	 
-71.	#Accuracy using SVM Model
-72.	SVM = LinearSVC(C=0.0100000,max_iter= 100000)
-73.	SVM.fit(X_train_dtm, y_train)
-74.	y_predSVM = SVM.predict(X_test_dtm)
-75.	print('\nSupport Vector Machine')
-76.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
-77.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
-78.	 
-79.	 
-80.	 
-81.	#Accuracy using Logistic Regression Model
-82.	LR = LogisticRegression(C=0.0100000)
-83.	LR.fit(X_train_dtm, y_train)
-84.	y_predLR = LR.predict(X_test_dtm)
-85.	print('\nLogistic Regression')
-86.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predLR)*100,'%',sep='')
-87.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predLR), sep = '\n')
-88.	 
-89.	 
-90.	#Accuracy using KNN Model
-91.	KNN = KNeighborsClassifier(n_neighbors = 3)
-92.	KNN.fit(X_train_dtm, y_train)
-93.	y_predKNN = KNN.predict(X_test_dtm)
-94.	print('\nK Nearest Neighbors (NN = 3)')
-95.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
-96.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
-97.	 
-98.	 
-99.	#Accuracy using KNN ModelV2
-100.	KNN = KNeighborsClassifier(n_neighbors = 7)
-101.	KNN.fit(X_train_dtm, y_train)
-102.	y_predKNN = KNN.predict(X_test_dtm)
-103.	print('\nK Nearest Neighbors (NN = 7)')
-104.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
-105.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
-106.	 
-107.	 
-108.	 
-109.	#Random Forest Classifier
-110.	RF = RandomForestClassifier (n_estimators = 100, max_depth = 1000)
-111.	RF.fit(X_train_dtm,y_train)
-112.	y_predRF = RF.predict(X_test_dtm)
-113.	print('\n Random Forest Classifier')
-114.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predRF)*100,'%',sep='')
-115.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predRF), sep = '\n')
-116.	 
-117.	 
-118.	#Decision Tree
-119.	dt = DecisionTreeClassifier (max_depth = 20)
-120.	dt.fit(X_train_dtm,y_train)
-121.	y_predDT = dt.predict(X_test_dtm)
-122.	print('\n Decision Tree Classifier')
-123.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predDT)*100,'%',sep='')
-124.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predDT), sep = '\n')
-125.	 
-126.	 
-127.	 
-128.	#Accuracy using KNN Model
-129.	KNN = KNeighborsClassifier()
-130.	KNN.fit(X_train_dtm, y_train)
-131.	y_predKNN = KNN.predict(X_test_dtm)
-132.	print('\nK Nearest Neighbors ()')
-133.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
-134.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
-135.	 
-136.	 
-137.	#Accuracy using KNN Model
-138.	KNN = KNeighborsClassifier(n_neighbors = 5)
-139.	KNN.fit(X_train_dtm, y_train)
-140.	y_predKNN = KNN.predict(X_test_dtm)
-141.	print('\nK Nearest Neighbors (NN = 5)')
-142.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
-143.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
-144.	 
-145.	 
-146.	#Accuracy using SVM Model
-147.	SVM = SVC(kernel = 'linear', C = 0.1, gamma = 'auto')
-148.	SVM.fit(X_train_dtm, y_train)
-149.	y_predSVM = SVM.predict(X_test_dtm)
-150.	print('\nSupport Vector Machine')
-151.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
-152.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
-153.	 
-154.	#Accuracy using SVM Model
-155.	SVM = SVC(kernel = 'poly', C = 0.1, gamma = 'auto')
-156.	SVM.fit(X_train_dtm, y_train)
-157.	y_predSVM = SVM.predict(X_test_dtm)
-158.	print('\nSupport Vector Machine')
-159.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
-160.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
-161.	 
-162.	#Accuracy using SVM Model
-163.	SVM = SVC(kernel = 'sigmoid', C = 0.1, gamma = 'auto')
-164.	SVM.fit(X_train_dtm, y_train)
-165.	y_predSVM = SVM.predict(X_test_dtm)
-166.	print('\nSupport Vector Machine')
-167.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
-168.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
-169.	 
-170.	 
-171.	 
-172.	#Accuracy using SVM Model
-173.	SVM = SVC(kernel = 'rbf', C = 10.00000, gamma = 'auto')
-174.	SVM.fit(X_train_dtm, y_train)
-175.	y_predSVM = SVM.predict(X_test_dtm)
-176.	print('\nSupport Vector Machine')
-177.	print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
-178.	print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
-179.	 
+#Importing Essentials
+import pandas as pd
+from sklearn import metrics
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingRegressor
+ 
+ 
+import pymongo
+from pymongo import MongoClient
+client = MongoClient ('localhost',27017)
+db = client.tesis
+candidatos = db.Candidatos
+ 
+from warnings import simplefilter
+simplefilter(action='ignore', category=FutureWarning)
+ 
+ 
+processedTweets = []
+contador = 0        
+for tweet in candidatos.find({"$or": [{'sentiment':"positivo"},{'sentiment':"negativo"}]},no_cursor_timeout=True):
+    orden = contador
+    text = tweet['text']
+    _id = tweet["_id"]
+    sentiment = tweet['sentiment']
+    processedTweets.append({'orden':orden,'text':text,'_id':_id,'sentiment':sentiment})
+    frame_tweets = pd.DataFrame(processedTweets, columns = ['orden','text','_id','sentiment'])
+    contador = contador +1
+    
+print (frame_tweets.shape)
+ 
+            
+processedTweetsX = frame_tweets.text
+processedTweetsY = frame_tweets.sentiment
+#Using CountVectorizer to convert text into tokens/features
+vect = CountVectorizer(stop_words='english', ngram_range = (1,1), max_df = .80, min_df = 4)
+X_train, X_test, y_train, y_test = train_test_split(processedTweetsX,processedTweetsY,random_state=1, test_size= 0.2)
+#Using training data to transform text into counts of features for each message
+vect.fit(X_train)
+X_train_dtm = vect.transform(X_train) 
+X_test_dtm = vect.transform(X_test)
+ 
+#Accuracy using Naive Bayes Model
+NB = MultinomialNB(alpha = 0.001)
+NB.fit(X_train_dtm, y_train)
+y_predNB = NB.predict(X_test_dtm)
+print('\nNaive Bayes Multinomial')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predNB)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predNB), sep = '\n')
+ 
+#Accuracy using Naive Bayes Model
+NB = BernoulliNB(alpha = 0.001)
+NB.fit(X_train_dtm, y_train)
+y_predNB = NB.predict(X_test_dtm)
+print('\nNaive Bayes BernoulliNB')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predNB)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predNB), sep = '\n')
+ 
+ 
+ 
+#Accuracy using SVM Model
+SVM = LinearSVC(C=0.0100000,max_iter= 100000)
+SVM.fit(X_train_dtm, y_train)
+y_predSVM = SVM.predict(X_test_dtm)
+print('\nSupport Vector Machine')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
+ 
+ 
+ 
+#Accuracy using Logistic Regression Model
+LR = LogisticRegression(C=0.0100000)
+LR.fit(X_train_dtm, y_train)
+y_predLR = LR.predict(X_test_dtm)
+print('\nLogistic Regression')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predLR)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predLR), sep = '\n')
+ 
+ 
+#Accuracy using KNN Model
+KNN = KNeighborsClassifier(n_neighbors = 3)
+KNN.fit(X_train_dtm, y_train)
+y_predKNN = KNN.predict(X_test_dtm)
+print('\nK Nearest Neighbors (NN = 3)')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
+ 
+ 
+#Accuracy using KNN ModelV2
+KNN = KNeighborsClassifier(n_neighbors = 7)
+KNN.fit(X_train_dtm, y_train)
+y_predKNN = KNN.predict(X_test_dtm)
+print('\nK Nearest Neighbors (NN = 7)')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
+ 
+ 
+ 
+#Random Forest Classifier
+RF = RandomForestClassifier (n_estimators = 100, max_depth = 1000)
+RF.fit(X_train_dtm,y_train)
+y_predRF = RF.predict(X_test_dtm)
+print('\n Random Forest Classifier')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predRF)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predRF), sep = '\n')
+ 
+ 
+#Decision Tree
+dt = DecisionTreeClassifier (max_depth = 20)
+dt.fit(X_train_dtm,y_train)
+y_predDT = dt.predict(X_test_dtm)
+print('\n Decision Tree Classifier')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predDT)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predDT), sep = '\n')
+ 
+ 
+ 
+#Accuracy using KNN Model
+KNN = KNeighborsClassifier()
+KNN.fit(X_train_dtm, y_train)
+y_predKNN = KNN.predict(X_test_dtm)
+print('\nK Nearest Neighbors ()')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
+ 
+ 
+#Accuracy using KNN Model
+KNN = KNeighborsClassifier(n_neighbors = 5)
+KNN.fit(X_train_dtm, y_train)
+y_predKNN = KNN.predict(X_test_dtm)
+print('\nK Nearest Neighbors (NN = 5)')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predKNN)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predKNN), sep = '\n')
+ 
+ 
+#Accuracy using SVM Model
+SVM = SVC(kernel = 'linear', C = 0.1, gamma = 'auto')
+SVM.fit(X_train_dtm, y_train)
+y_predSVM = SVM.predict(X_test_dtm)
+print('\nSupport Vector Machine')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
+ 
+#Accuracy using SVM Model
+SVM = SVC(kernel = 'poly', C = 0.1, gamma = 'auto')
+SVM.fit(X_train_dtm, y_train)
+y_predSVM = SVM.predict(X_test_dtm)
+print('\nSupport Vector Machine')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
+ 
+#Accuracy using SVM Model
+SVM = SVC(kernel = 'sigmoid', C = 0.1, gamma = 'auto')
+SVM.fit(X_train_dtm, y_train)
+y_predSVM = SVM.predict(X_test_dtm)
+print('\nSupport Vector Machine')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
+ 
+ 
+ 
+#Accuracy using SVM Model
+SVM = SVC(kernel = 'rbf', C = 10.00000, gamma = 'auto')
+SVM.fit(X_train_dtm, y_train)
+y_predSVM = SVM.predict(X_test_dtm)
+print('\nSupport Vector Machine')
+print('Accuracy Score: ',metrics.accuracy_score(y_test,y_predSVM)*100,'%',sep='')
+print('Confusion Matrix: ',metrics.confusion_matrix(y_test,y_predSVM), sep = '\n')
+ 
+ 
