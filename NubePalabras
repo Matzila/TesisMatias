@@ -1,0 +1,74 @@
+import numpy as np
+import pandas as pd
+from os import path
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS, ImageColorGenerator
+ 
+import re
+ 
+ 
+import nltk
+from nltk.corpus import stopwords
+ 
+import pymongo
+from pymongo import MongoClient
+ 
+import matplotlib.pyplot as plt
+#%matplotlib inline
+ 
+stop_words = set (stopwords.words('spanish'))
+stop_words_mios = {'+0000','aug',"b'rt",'jul','.','-','|','nov','si','mas','x','d','}','{',"'{'text':",'sep','vos','tan','tenes','','q','text','rt','text"', 'text ', "text '","text'","'","https","va", "asi", "ser"}
+stop_words.update(stop_words_mios)
+ 
+ 
+client = MongoClient ('localhost',27017)
+db = client.tesis
+candidatos = db.Candidatos
+ 
+ 
+ 
+wordsT = ""
+ 
+ 
+for tweet in candidatos.find({"$and": [{'sentiment':"negativo"},{'candidato':'Del_Cano'}]},{'text':1,'_id':0},no_cursor_timeout=True):
+        tweetS = str(tweet)
+        tweetS = tweetS.strip()
+        tweetS = tweetS.lower()
+        words = tweetS.split(" ")
+        for word in words: 
+                # Check if the word is already in dictionary
+                if word not in stop_words:
+                        if word not in stop_words_mios:
+                                numeros = re.search(r'\d+', word)
+                                if not numeros:
+                                        wordsT = wordsT + ' ' + word
+ 
+d = dict()
+ 
+for tweet in candidatos.find({'candidato':'Del_Cano'},{'text':1,'_id':0},no_cursor_timeout=True):
+        tweetS = str(tweet)
+        tweetS = tweetS.strip()
+        tweetS = tweetS.lower()
+        words = tweetS.split(" ")
+ 
+        for word in words:
+                if word not in stop_words:
+                        if word not in stop_words_mios:
+                                numeros = re.search(r'\d+', word)
+                                if not numeros:
+                                        if word in d:
+                                                d[word] = d[word] + 1
+                                        else:
+                                                d[word] = 1
+ 
+ 
+ 
+ 
+mask = np.array(Image.open("IzquierdaTest.jpg"))
+wordcloud_arg = WordCloud(stopwords=stop_words, background_color="white", mode="RGBA", max_words=100, mask=mask).generate(wordsT)
+image_colors = ImageColorGenerator(mask)
+plt.figure(figsize=[7,7])
+plt.imshow(wordcloud_arg.recolor(color_func=image_colors), interpolation="bilinear")
+plt.axis("off")
+ 
+plt.show()
