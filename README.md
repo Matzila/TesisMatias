@@ -2,7 +2,7 @@
 
 ## Scripts utilizados para el caso práctico
 
-##### Tweet crawler:Este script es utilizado para la descarga de tweets, con la palabra clave en la variable “Brand”. Este archivo representa la descarga de tweets del candidato Espert.
+##### Tweet crawler: Este script es utilizado para la descarga de tweets, con la palabra clave en la variable “Brand”. Este archivo representa la descarga de tweets del candidato Espert.
 
 ##### Parseo y conversión a CSV: Los tweets descargados en el script anterior son convertidos para adaptarlos a MongoDB.
 
